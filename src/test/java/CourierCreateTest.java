@@ -1,3 +1,5 @@
+import api.BaseApi;
+import api.CourierApi;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import org.example.Courier;
@@ -7,11 +9,14 @@ import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import static org.apache.http.HttpStatus.*;
 
-public class CourierCreateTest extends CourierApi{
+public class CourierCreateTest extends BaseApi {
+
+    private CourierApi courierApi;
 
     @Before
     public void setUp() {
         super.setupRequestSpecification();
+        this.courierApi = new CourierApi(requestSpecification);
     }
 
     //курьера можно создать;
@@ -21,7 +26,11 @@ public class CourierCreateTest extends CourierApi{
     @DisplayName("Проверка создания курьера (успешно)")
     @Description("Успешная проверка создания курьера")
     public void checkCreateCourier(){
-        createCourier();
+        courierApi.setCourier(new Courier("ya", "1234", "saske"));
+        courierApi.createCourier()
+                .then().assertThat().body("ok", is(true))
+                .and()
+                .statusCode(SC_CREATED);
     }
 
     //нельзя создать двух одинаковых курьеров;
@@ -30,12 +39,9 @@ public class CourierCreateTest extends CourierApi{
     @DisplayName("Проверка создания курьера с дублирующими данными")
     @Description("Проверка, что нельзя создать дубль курьера")
     public void checkCreateDuplicateCourier(){
-        Courier courier = createCourier();
-        requestSpecification
-                .given()
-                .body(courier) // заполни body
-                .when()
-                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+        courierApi.setCourier(new Courier("ya", "1234", "saske"));
+        courierApi.createCourier();
+        courierApi.createCourier()
                 .then().assertThat().body("message", equalTo("Этот логин уже используется. Попробуйте другой."))
                 .and()
                 .statusCode(SC_CONFLICT);
@@ -47,12 +53,8 @@ public class CourierCreateTest extends CourierApi{
     @DisplayName("Проверка создания курьера без пароля и имени")
     @Description("Проверка, что нельзя создать курьера без пароля и имени")
     public void checkCreateCourierWithoutPassName(){
-        Courier courier = new Courier("ya", "", "");
-        requestSpecification
-                .given()
-                .body(courier) // заполни body
-                .when()
-                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+        courierApi.setCourier(new Courier("ya", "", ""));
+        courierApi.createCourier()
                 .then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
                 .and()
                 .statusCode(SC_BAD_REQUEST);
@@ -64,12 +66,8 @@ public class CourierCreateTest extends CourierApi{
     @DisplayName("Проверка создания курьера без логина и имени")
     @Description("Проверка, что нельзя создать курьера без логина и имени")
     public void checkCreateCourierWithoutLoginName(){
-        Courier courier = new Courier("", "1234", "");
-        requestSpecification
-                .given()
-                .body(courier) // заполни body
-                .when()
-                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+        courierApi.setCourier(new Courier("", "1234", ""));
+        courierApi.createCourier()
                 .then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
                 .and()
                 .statusCode(SC_BAD_REQUEST);
@@ -81,12 +79,8 @@ public class CourierCreateTest extends CourierApi{
     @DisplayName("Проверка создания курьера без пароля и логина")
     @Description("Проверка, что нельзя создать курьера без пароля и логина")
     public void checkCreateCourierWithoutLoginPass(){
-        Courier courier = new Courier("", "", "saske");
-        requestSpecification
-                .given()
-                .body(courier) // заполни body
-                .when()
-                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+        courierApi.setCourier(new Courier("", "", "saske"));
+        courierApi.createCourier()
                 .then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
                 .and()
                 .statusCode(SC_BAD_REQUEST);
@@ -94,6 +88,6 @@ public class CourierCreateTest extends CourierApi{
 
     @After
     public void dataClean(){
-        deleteCourier();
+        courierApi.deleteCourier();
     }
 }

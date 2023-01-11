@@ -1,16 +1,24 @@
+import api.BaseApi;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import org.example.Order;
+import api.OrderApi;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import static org.apache.http.HttpStatus.SC_CREATED;
+import static org.hamcrest.Matchers.notNullValue;
+
 @RunWith(Parameterized.class)
-public class OrderCreateTest extends OrderApi{
+public class OrderCreateTest extends BaseApi {
+
+    private final Order order;
+    private OrderApi orderApi;
 
     public OrderCreateTest(Order order) {
-        super(order);
+        this.order = order;
     }
 
     @Parameterized.Parameters
@@ -26,12 +34,18 @@ public class OrderCreateTest extends OrderApi{
     @Before
     public void setUp() {
         super.setupRequestSpecification();
+        this.orderApi = new OrderApi(requestSpecification);
     }
 
     @Test
     @DisplayName("Проверка создания заказов")
     @Description("Проверка создания заказов с разными color")
     public void checkOrderCreate(){
-        createOrder();
+        OrderApi orderApi = new OrderApi(requestSpecification);
+        orderApi.setOrder(order);
+        orderApi.createOrder()
+                .then().assertThat().body("track", notNullValue())
+                .and()
+                .statusCode(SC_CREATED);
     }
 }

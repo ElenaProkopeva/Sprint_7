@@ -1,9 +1,9 @@
-C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\OrderApi.java
 C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\OrderListTest.java
 C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\AcceptOrderTest.java
-C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\BaseApi.java
-C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\CourierApi.java
+C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\api\OrderApi.java
+C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\api\CourierApi.java
 C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\OrderCreateTest.java
+C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\api\BaseApi.java
 C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\CourierCreateTest.java
 C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\CourierLoginTest.java
 C:\Users\egromova\IdeaProjects\Sprint_7\src\test\java\DeleteCourierTest.java

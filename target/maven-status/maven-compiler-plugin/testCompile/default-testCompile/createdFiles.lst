@@ -1,7 +1,7 @@
-BaseApi.class
-OrderApi.class
+api\OrderApi.class
+api\BaseApi.class
 OrderCreateTest.class
 CourierCreateTest.class
 OrderListTest.class
+api\CourierApi.class
 CourierLoginTest.class
-CourierApi.class

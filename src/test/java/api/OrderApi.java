@@ -1,31 +1,41 @@
-package org.example;
+package api;
 
 import io.qameta.allure.Step;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.example.Order;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.apache.http.HttpStatus.*;
 
-public class OrderApi extends BaseApi {
+public class OrderApi{
 
-    private final Order order;
+    protected final static String ORDERS_ENDPOINT = "/orders";
+    private Order order;
     private final RequestSpecification requestSpecification;
 
-    public OrderApi(Order order, RequestSpecification requestSpecification) {
-        this.order = order;
+    public OrderApi(RequestSpecification requestSpecification) {
         this.requestSpecification = requestSpecification;
     }
 
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
     @Step("Создать заказ и получить track")
-    public void createOrder(){
-        requestSpecification
+    public Response createOrder(){
+        Response response =
+            requestSpecification
                 .given()
                 .body(order) // заполни body
                 .when()
-                .post(ORDERS_ENDPOINT) // отправь запрос на ручку
-                .then().assertThat().body("track", notNullValue())
-                .and()
-                .statusCode(SC_CREATED);
+                .post(ORDERS_ENDPOINT); // отправь запрос на ручку
+    return response;
     }
 
+    @Step("Получить список заказов")
+    public Response getOrderList(){
+        Response response =
+                requestSpecification
+                        .given()
+                        .get(ORDERS_ENDPOINT); // отправь запрос на ручку
+        return response;
+    }
 }
