@@ -1,14 +1,19 @@
+package org.example;
+
 import io.qameta.allure.Step;
+import io.restassured.specification.RequestSpecification;
 import org.example.Order;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.apache.http.HttpStatus.*;
 
-public class OrderApi extends BaseApi{
+public class OrderApi extends BaseApi {
 
     private final Order order;
+    private final RequestSpecification requestSpecification;
 
-    public OrderApi(Order order) {
+    public OrderApi(Order order, RequestSpecification requestSpecification) {
         this.order = order;
+        this.requestSpecification = requestSpecification;
     }
 
     @Step("Создать заказ и получить track")

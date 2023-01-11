@@ -1,15 +1,25 @@
+package org.example;
+
 import io.qameta.allure.Step;
+import io.restassured.specification.RequestSpecification;
+import org.example.BaseApi;
 import org.example.Courier;
 import static org.hamcrest.Matchers.*;
 import static org.apache.http.HttpStatus.*;
 
-public class CourierApi extends BaseApi{
+public class CourierApi extends BaseApi {
 
-    private Courier courier;
+    private final Courier courier;
+    private final RequestSpecification requestSpecification;
+
+    public CourierApi(RequestSpecification requestSpecification) {
+        this.courier = new Courier("ya", "1234", "saske");
+        this.requestSpecification = requestSpecification;
+    }
 
     @Step("Создать курьера и проверить статус ответа")
     public Courier createCourier(){
-        this.courier = new Courier("ya", "1234", "saske");
+        //   this.courier = new Courier("ya", "1234", "saske");
         requestSpecification
                 .given()
                 .body(courier) // заполни body
