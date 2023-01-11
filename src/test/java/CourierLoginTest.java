@@ -1,99 +1,81 @@
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
-import org.example.Courier;
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-// дополнительный статический импорт нужен, чтобы использовать given(), get() и then()
-import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
+import static org.apache.http.HttpStatus.*;
 
-public class CourierLoginTest {
+public class CourierLoginTest extends CourierApi{
 
     @Before
     public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
+        super.setupRequestSpecification();
     }
 
     //курьер может авторизоваться;
     //успешный запрос возвращает id
     @Test
+    @DisplayName("Проверка авторизации курьера (успешно)")
+    @Description("Успешная проверка логина курьера")
     public void checkLoginCourier(){
-        Courier courier = new Courier("ya", "1234", "saske");
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(courier) // заполни body
-                        .when()
-                        .post("/api/v1/courier") // отправь запрос на ручку
-                        .then().statusCode(201);
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(courier) // заполни body
-                        .when()
-                        .post("/api/v1/courier/login"); // отправь запрос на ручку
-        response.then().assertThat().body("id", notNullValue())
-                .and()
-                .statusCode(200);
-        deleteCourier(courier);
+        createCourier();
+        loginCourier();
     }
 
     //для авторизации нужно передать все обязательные поля;
     //если какого-то поля нет, запрос возвращает ошибку;
     @Test
+    @DisplayName("Проверка авторизации курьера без пароля")
+    @Description("Проверка, что нельзя залогиниться без ввода пароля")
     public void checkLoginCourierWithoutPassword(){
         String json = "{\"login\": \"ya\", \"password\": \"\"}";
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(json) // заполни body
-                        .when()
-                        .post("/api/v1/courier/login"); // отправь запрос на ручку
-        response.then().assertThat().body("message", equalTo("Недостаточно данных для входа"))
+        requestSpecification
+                .given()
+                .body(json) // заполни body
+                .when()
+                .post(COURIER_LOGIN_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("message", equalTo("Недостаточно данных для входа"))
                 .and()
-                .statusCode(400);
+                .statusCode(SC_BAD_REQUEST);
     }
 
     //для авторизации нужно передать все обязательные поля;
     //если какого-то поля нет, запрос возвращает ошибку;
     @Test
+    @DisplayName("Проверка авторизации курьера без логина")
+    @Description("Проверка, что нельзя залогиниться без ввода логина")
     public void checkLoginCourierWithoutLogin(){
         String json = "{\"password\": \"1234\"}";
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(json) // заполни body
-                        .when()
-                        .post("/api/v1/courier/login"); // отправь запрос на ручку
-        response.then().assertThat().body("message", equalTo("Недостаточно данных для входа"))
+        requestSpecification
+                .given()
+                .body(json) // заполни body
+                .when()
+                .post(COURIER_LOGIN_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("message", equalTo("Недостаточно данных для входа"))
                 .and()
-                .statusCode(400);
+                .statusCode(SC_BAD_REQUEST);
     }
 
     //система вернёт ошибку, если неправильно указать логин или пароль;
     //если авторизоваться под несуществующим пользователем, запрос возвращает ошибку;
     @Test
+    @DisplayName("Проверка авторизации курьера с некорректным логином и паролем")
+    @Description("Проверка, что нельзя залогиниться с некорректным логином и паролем")
     public void checkLoginPasswordCourierIsIncorrect(){
         String json = "{\"login\": \"ya\", \"password\": \"1234\"}";
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(json) // заполни body
-                        .when()
-                        .post("/api/v1/courier/login"); // отправь запрос на ручку
-        response.then().assertThat().body("message", equalTo("Учетная запись не найдена"))
+        requestSpecification
+                .given()
+                .body(json) // заполни body
+                .when()
+                .post(COURIER_LOGIN_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("message", equalTo("Учетная запись не найдена"))
                 .and()
-                .statusCode(404);
+                .statusCode(SC_NOT_FOUND);
     }
 
-    public void deleteCourier(Courier courier){
-        Integer courierId = given()
-                .header("Content-type", "application/json")// заполни header
-                .body(courier) // заполни body
-                .when()
-                .post("/api/v1/courier/login") // отправь запрос на ручку
-                .then().extract().body().path("id");
-        given()
-                .delete("/api/v1/courier/{id}", courierId.toString()) // отправка DELETE-запроса
-                .then().assertThat().statusCode(200); // проверка, что сервер вернул код 200
+    @After
+    public void dataClean(){
+        deleteCourier();
     }
 }

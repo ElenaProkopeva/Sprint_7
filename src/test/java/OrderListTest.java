@@ -1,25 +1,27 @@
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
 import org.junit.Before;
 import org.junit.Test;
 // дополнительный статический импорт нужен, чтобы использовать given(), get() и then()
-import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
+import static org.apache.http.HttpStatus.*;
 
-public class OrderListTest {
+public class OrderListTest extends BaseApi{
+
     @Before
     public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
+        super.setupRequestSpecification();
     }
 
     @Test
+    @DisplayName("Проверка получения списка заказов")
+    @Description("Успешное получение списка заказов")
     public void checkOrderList(){
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .get("/api/v1/orders"); // отправь запрос на ручку
-        response.then().assertThat().body("orders", notNullValue())
+        requestSpecification
+                .given()
+                .get(ORDERS_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("orders", notNullValue())
                 .and()
-                .statusCode(200);
+                .statusCode(SC_OK);
     }
 }

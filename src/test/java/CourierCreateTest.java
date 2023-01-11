@@ -1,117 +1,99 @@
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
 import org.example.Courier;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-// дополнительный статический импорт нужен, чтобы использовать given(), get() и then()
-import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
+import static org.apache.http.HttpStatus.*;
 
-public class CourierCreateTest {
+public class CourierCreateTest extends CourierApi{
 
     @Before
     public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
+        super.setupRequestSpecification();
     }
 
     //курьера можно создать;
     //запрос возвращает правильный код ответа;
     //успешный запрос возвращает ok: true
     @Test
+    @DisplayName("Проверка создания курьера (успешно)")
+    @Description("Успешная проверка создания курьера")
     public void checkCreateCourier(){
-        Courier courier = new Courier("ya", "1234", "saske");
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(courier) // заполни body
-                        .when()
-                        .post("/api/v1/courier"); // отправь запрос на ручку
-        response.then().assertThat().body("ok", is(true))
-                .and()
-                .statusCode(201);
-        deleteCourier(courier);
+        createCourier();
     }
 
     //нельзя создать двух одинаковых курьеров;
     //если создать пользователя с логином, который уже есть, возвращается ошибка.
     @Test
+    @DisplayName("Проверка создания курьера с дублирующими данными")
+    @Description("Проверка, что нельзя создать дубль курьера")
     public void checkCreateDuplicateCourier(){
-        Courier courier = new Courier("ya", "123", "saske");
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(courier) // заполни body
-                        .when()
-                        .post("/api/v1/courier") // отправь запрос на ручку
-                        .then().statusCode(201);
-        Response response =
-                given()
-                    .header("Content-type", "application/json")// заполни header
-                    .body(courier) // заполни body
-                    .when()
-                    .post("/api/v1/courier"); // отправь запрос на ручку
-        response.then().assertThat().body("message", equalTo("Этот логин уже используется. Попробуйте другой."))
-                .and()
-                .statusCode(409);
-        deleteCourier(courier);
-    }
-
-    //чтобы создать курьера, нужно передать в ручку все обязательные поля
-    //если одного из полей нет, запрос возвращает ошибку;
-    @Test
-    public void checkCreateCourierWithoutPassName(){
-        Courier courier = new Courier("ya", "", "");
-        Response response =
-                given()
-                    .header("Content-type", "application/json")// заполни header
-                    .body(courier) // заполни body
-                    .when()
-                    .post("/api/v1/courier"); // отправь запрос на ручку
-        response.then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
-                .and()
-                .statusCode(400);
-    }
-
-    //чтобы создать курьера, нужно передать в ручку все обязательные поля
-    //если одного из полей нет, запрос возвращает ошибку;
-    @Test
-    public void checkCreateCourierWithoutLoginName(){
-        Courier courier = new Courier("", "1234", "");
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(courier) // заполни body
-                        .when()
-                        .post("/api/v1/courier"); // отправь запрос на ручку
-        response.then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
-                .and()
-                .statusCode(400);
-    }
-
-    //чтобы создать курьера, нужно передать в ручку все обязательные поля
-    //если одного из полей нет, запрос возвращает ошибку;
-    @Test
-    public void checkCreateCourierWithoutLoginPass(){
-        Courier courier = new Courier("", "", "saske");
-        Response response =
-                given()
-                        .header("Content-type", "application/json")// заполни header
-                        .body(courier) // заполни body
-                        .when()
-                        .post("/api/v1/courier"); // отправь запрос на ручку
-        response.then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
-                .and()
-                .statusCode(400);
-    }
-
-    public void deleteCourier(Courier courier){
-        Integer courierId = given()
-                .header("Content-type", "application/json")// заполни header
+        Courier courier = createCourier();
+        requestSpecification
+                .given()
                 .body(courier) // заполни body
                 .when()
-                .post("/api/v1/courier/login") // отправь запрос на ручку
-                .then().extract().body().path("id");
-        given()
-                .delete("/api/v1/courier/{id}", courierId.toString()) // отправка DELETE-запроса
-                .then().assertThat().statusCode(200); // проверка, что сервер вернул код 200
+                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("message", equalTo("Этот логин уже используется. Попробуйте другой."))
+                .and()
+                .statusCode(SC_CONFLICT);
+    }
+
+    //чтобы создать курьера, нужно передать в ручку все обязательные поля
+    //если одного из полей нет, запрос возвращает ошибку;
+    @Test
+    @DisplayName("Проверка создания курьера без пароля и имени")
+    @Description("Проверка, что нельзя создать курьера без пароля и имени")
+    public void checkCreateCourierWithoutPassName(){
+        Courier courier = new Courier("ya", "", "");
+        requestSpecification
+                .given()
+                .body(courier) // заполни body
+                .when()
+                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
+                .and()
+                .statusCode(SC_BAD_REQUEST);
+    }
+
+    //чтобы создать курьера, нужно передать в ручку все обязательные поля
+    //если одного из полей нет, запрос возвращает ошибку;
+    @Test
+    @DisplayName("Проверка создания курьера без логина и имени")
+    @Description("Проверка, что нельзя создать курьера без логина и имени")
+    public void checkCreateCourierWithoutLoginName(){
+        Courier courier = new Courier("", "1234", "");
+        requestSpecification
+                .given()
+                .body(courier) // заполни body
+                .when()
+                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
+                .and()
+                .statusCode(SC_BAD_REQUEST);
+    }
+
+    //чтобы создать курьера, нужно передать в ручку все обязательные поля
+    //если одного из полей нет, запрос возвращает ошибку;
+    @Test
+    @DisplayName("Проверка создания курьера без пароля и логина")
+    @Description("Проверка, что нельзя создать курьера без пароля и логина")
+    public void checkCreateCourierWithoutLoginPass(){
+        Courier courier = new Courier("", "", "saske");
+        requestSpecification
+                .given()
+                .body(courier) // заполни body
+                .when()
+                .post(COURIER_CREATE_ENDPOINT) // отправь запрос на ручку
+                .then().assertThat().body("message", equalTo("Недостаточно данных для создания учетной записи"))
+                .and()
+                .statusCode(SC_BAD_REQUEST);
+    }
+
+    @After
+    public void dataClean(){
+        deleteCourier();
     }
 }
