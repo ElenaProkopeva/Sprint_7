@@ -1,16 +1,22 @@
+import api.BaseApi;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
+import api.CourierApi;
+import org.example.Courier;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import static org.apache.http.HttpStatus.*;
 
-public class CourierLoginTest extends CourierApi{
+public class CourierLoginTest extends BaseApi {
+
+    private CourierApi courierApi;
 
     @Before
     public void setUp() {
         super.setupRequestSpecification();
+        this.courierApi = new CourierApi(requestSpecification);
     }
 
     //курьер может авторизоваться;
@@ -19,8 +25,12 @@ public class CourierLoginTest extends CourierApi{
     @DisplayName("Проверка авторизации курьера (успешно)")
     @Description("Успешная проверка логина курьера")
     public void checkLoginCourier(){
-        createCourier();
-        loginCourier();
+        courierApi.setCourier(new Courier("ya", "1234", "saske"));
+        courierApi.createCourier();
+        courierApi.loginCourier()
+                .then().assertThat().body("id", notNullValue())
+                .and()
+                .statusCode(SC_OK);
     }
 
     //для авторизации нужно передать все обязательные поля;
@@ -29,12 +39,8 @@ public class CourierLoginTest extends CourierApi{
     @DisplayName("Проверка авторизации курьера без пароля")
     @Description("Проверка, что нельзя залогиниться без ввода пароля")
     public void checkLoginCourierWithoutPassword(){
-        String json = "{\"login\": \"ya\", \"password\": \"\"}";
-        requestSpecification
-                .given()
-                .body(json) // заполни body
-                .when()
-                .post(COURIER_LOGIN_ENDPOINT) // отправь запрос на ручку
+        courierApi.setCourier(new Courier("ya", ""));
+        courierApi.loginCourier()
                 .then().assertThat().body("message", equalTo("Недостаточно данных для входа"))
                 .and()
                 .statusCode(SC_BAD_REQUEST);
@@ -46,12 +52,8 @@ public class CourierLoginTest extends CourierApi{
     @DisplayName("Проверка авторизации курьера без логина")
     @Description("Проверка, что нельзя залогиниться без ввода логина")
     public void checkLoginCourierWithoutLogin(){
-        String json = "{\"password\": \"1234\"}";
-        requestSpecification
-                .given()
-                .body(json) // заполни body
-                .when()
-                .post(COURIER_LOGIN_ENDPOINT) // отправь запрос на ручку
+        courierApi.setCourier(new Courier("", "1234"));
+        courierApi.loginCourier()
                 .then().assertThat().body("message", equalTo("Недостаточно данных для входа"))
                 .and()
                 .statusCode(SC_BAD_REQUEST);
@@ -63,12 +65,8 @@ public class CourierLoginTest extends CourierApi{
     @DisplayName("Проверка авторизации курьера с некорректным логином и паролем")
     @Description("Проверка, что нельзя залогиниться с некорректным логином и паролем")
     public void checkLoginPasswordCourierIsIncorrect(){
-        String json = "{\"login\": \"ya\", \"password\": \"1234\"}";
-        requestSpecification
-                .given()
-                .body(json) // заполни body
-                .when()
-                .post(COURIER_LOGIN_ENDPOINT) // отправь запрос на ручку
+        courierApi.setCourier(new Courier("null", "null"));
+        courierApi.loginCourier()
                 .then().assertThat().body("message", equalTo("Учетная запись не найдена"))
                 .and()
                 .statusCode(SC_NOT_FOUND);
@@ -76,6 +74,6 @@ public class CourierLoginTest extends CourierApi{
 
     @After
     public void dataClean(){
-        deleteCourier();
+        courierApi.deleteCourier();
     }
 }
